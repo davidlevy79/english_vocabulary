@@ -179,7 +179,7 @@
             { english: 'swimming', hebrew: 'לשחות', category: 'actions', emoji: '🏊' },
             { english: 'laughing', hebrew: 'לצחוק', category: 'actions', emoji: '😂' },
             { english: 'flying', hebrew: 'לעוף', category: 'actions', emoji: '✈️' },
-            { english: 'dancing', hebrew: 'לרקד', category: 'actions', emoji: '💃' },
+            { english: 'dancing', hebrew: 'לרקוד', category: 'actions', emoji: '💃' },
 
             // Category: Adjectives
             { english: 'happy', hebrew: 'שמח', category: 'adjectives', emoji: '😊' },
@@ -210,6 +210,19 @@
         function initAudio() {
             if (!audioCtx) {
                 audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+        
+        function pronounceWord(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'en-US';
+                utterance.rate = 0.8; // Friendly, slightly slower pace for kids
+                utterance.pitch = 1.05; // Light, clear kid-friendly tone
+                window.speechSynthesis.speak(utterance);
+            } else {
+                showToast("הקראת מילים אינה נתמכת במכשיר זה", "error");
             }
         }
         
@@ -358,10 +371,10 @@
             const db = state.firebase.db;
             const appId = state.firebase.appId;
 
-            // RULE 1: Strict collection reference path
+            // Strict collection reference path
             const collectionRef = window.F_collection(db, 'artifacts', appId, 'public', 'data', 'saved_buckets');
 
-            // RULE 2: No complex queries, fetch all and sort in memory
+            // Listen for realtime cloud updates
             window.F_onSnapshot(collectionRef, (snapshot) => {
                 state.savedBuckets = [];
                 snapshot.forEach((doc) => {
@@ -442,7 +455,7 @@
                         <i class="fa-solid fa-language text-3xl"></i>
                     </div>
                     <h1 class="text-2xl font-black text-indigo-900 tracking-tight">מפתח המילים באנגלית</h1>
-                    <p class="text-gray-500 text-xs mt-0.5">תרגול אינטראקטיבי מהנה מותאם לגילאי 8 עד 12</p>
+                    <p class="text-gray-500 text-xs mt-0.5">תרגול אינטראקטיבי מהמהם לגילאי 8 עד 12</p>
                 </div>
 
                 <!-- Navigation Tabs between settings generator and Cloud buckets list -->
@@ -491,7 +504,7 @@
         function renderCreateSettingsForm() {
             return `
                 <!-- Creation Mode Toggle -->
-                <div>
+                <div class="mb-4">
                     <label class="block text-xs font-black text-gray-700 mb-1.5">כיצד תרצו להרכיב את דלי המילים?</label>
                     <div class="grid grid-cols-2 gap-2">
                         <button onclick="setCreationMode('auto')" class="py-2.5 text-xs text-center font-black rounded-xl border-2 transition-all duration-150 ${state.settings.creationMode === 'auto' ? 'border-indigo-600 bg-indigo-50 text-indigo-800' : 'border-gray-200 text-gray-600 hover:bg-gray-50' }">
@@ -510,7 +523,7 @@
         function renderAutoSettings() {
             return `
                 <!-- Word Count Selector -->
-                <div>
+                <div class="mb-4">
                     <label class="block text-xs font-black text-gray-700 mb-1.5">כמה מילים נרצה לתרגל?</label>
                     <div class="grid grid-cols-4 gap-2">
                         ${[5, 10, 15, 20].map(num => `
@@ -522,7 +535,7 @@
                 </div>
 
                 <!-- Category Selector -->
-                <div>
+                <div class="mb-4">
                     <label class="block text-xs font-black text-gray-700 mb-1.5">בחרו קטגוריה / נושא:</label>
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
                         ${[
@@ -589,7 +602,9 @@
                 : state.settings.manualWords.map((w, idx) => `
                     <div class="flex items-center justify-between p-2 bg-white rounded-xl border border-indigo-100 text-xs">
                         <div class="flex items-center gap-2">
-                            <span class="text-sm select-none">${w.emoji}</span>
+                            <button onclick="pronounceWord('${w.english}')" class="p-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-lg transition-all shrink-0 flex items-center justify-center" title="השמע מילה">
+                                <i class="fa-solid fa-volume-high text-[10px]"></i>
+                            </button>
                             <span class="english-font font-bold uppercase tracking-wide text-indigo-950">${escapeHtml(w.english)}</span>
                             <span class="text-indigo-300 font-bold">=</span>
                             <span class="font-bold text-gray-700">${escapeHtml(w.hebrew)}</span>
@@ -604,7 +619,7 @@
                 ${loadSectionHtml}
                 ${editingBannerHtml}
                 <!-- Manual Add Word Panel -->
-                <div class="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100 space-y-3">
+                <div class="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100 space-y-3 mb-4">
                     <h4 class="text-xs font-black text-indigo-900"><i class="fa-solid fa-plus-circle ml-1"></i>הוספת מילה חדשה לדלי שלכם</h4>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                         <!-- English Input -->
@@ -637,7 +652,7 @@
                 </div>
 
                 <!-- Realtime Added List -->
-                <div>
+                <div class="mb-4">
                     <div class="flex justify-between items-center mb-1.5">
                         <label class="block text-xs font-black text-gray-700">המילים שהוספתם (${state.settings.manualWords.length}):</label>
                         ${state.settings.manualWords.length > 0 ? `
@@ -646,7 +661,7 @@
                             </button>
                         ` : ''}
                     </div>
-                    <div class="space-y-1.5 max-h-[140px] overflow-y-auto pr-1">
+                    <div class="space-y-1.5 max-h-[140px] overflow-y-auto pr-1 border border-gray-100 rounded-xl p-2 bg-gray-50/50">
                         ${listHtml}
                     </div>
                 </div>
@@ -1058,20 +1073,33 @@
                 <div id="quiz-workspace" class="flex-grow flex flex-col justify-center items-center py-2 relative">
                     
                     <!-- Word Box Card -->
-                    <div class="text-center mb-6">
-                        <div class="text-5xl md:text-6xl mb-3 select-none filter drop-shadow">${currentWord.emoji}</div>
+                    <div class="text-center mb-6 w-full">
                         
                         ${state.settings.mode === 'multiple' ? `
                             <!-- English word displayed large (Multiple choice mode) -->
-                            <h2 class="english-font text-4xl md:text-5xl font-extrabold text-indigo-900 leading-tight tracking-wide select-none">
-                                ${currentWord.english}
-                            </h2>
+                            <div class="flex items-center justify-center gap-3 mb-2 animate-pop">
+                                <h2 class="english-font text-4xl md:text-5xl font-extrabold text-indigo-900 leading-tight tracking-wide select-none">
+                                    ${currentWord.english}
+                                </h2>
+                                <button onclick="pronounceWord('${currentWord.english}')" 
+                                    class="w-12 h-12 bg-indigo-100 hover:bg-indigo-200 text-indigo-600 rounded-2xl flex items-center justify-center transition-all shadow-md active:scale-95" 
+                                    title="השמע מילה באנגלית">
+                                    <i class="fa-solid fa-volume-high text-xl"></i>
+                                </button>
+                            </div>
                             <p class="text-gray-400 text-sm mt-1 font-bold">מה הפירוש הנכון בעברית?</p>
                         ` : `
                             <!-- Hebrew word displayed (Spelling/Keyboard mode) -->
-                            <h2 class="text-3xl md:text-4xl font-black text-indigo-900 leading-tight select-none">
+                            <h2 class="text-3xl md:text-4xl font-black text-indigo-900 leading-tight select-none mb-3">
                                 ${currentWord.hebrew}
                             </h2>
+                            <div class="flex justify-center mb-3">
+                                <button onclick="pronounceWord('${currentWord.english}')" 
+                                    class="flex items-center gap-2 px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-xl transition-all shadow-sm font-bold text-xs border border-indigo-100 active:scale-95 animate-pop" 
+                                    title="השמע מילה באנגלית">
+                                    <i class="fa-solid fa-volume-high"></i> השמעת המילה באנגלית
+                                </button>
+                            </div>
                             <p class="text-gray-400 text-sm mt-1 font-bold">איך כותבים את המילה באנגלית?</p>
                             
                             <!-- Spelling field -->
@@ -1098,73 +1126,77 @@
             if (state.settings.mode === 'spelling') {
                 setupPhysicalKeyboardListeners();
             }
+
+            if (state.settings.mode === 'multiple') {
+                setTimeout(() => {
+                    pronounceWord(currentWord.english);
+                }, 250);
+            }
         }
 
         function renderOptionsList(word) {
             let html = `<div class="grid grid-cols-2 gap-3">`;
-            
             word.options.forEach((option) => {
-                let btnStyle = "bg-white hover:bg-indigo-50 text-gray-800 border-2 border-gray-200 hover:border-indigo-400";
-                let icon = "";
+                let btnStyles = "bg-white hover:bg-indigo-50 text-gray-800 border-2 border-gray-200 hover:border-indigo-400";
+                let iconHtml = "";
 
                 if (state.quiz.isAnswerChecked) {
                     if (option === word.hebrew) {
-                        btnStyle = "bg-green-100 text-green-800 border-2 border-green-500 shadow-sm";
-                        icon = '<i class="fa-solid fa-circle-check text-green-600 mr-2"></i>';
+                        btnStyles = "bg-green-100 text-green-800 border-2 border-green-500 shadow-md";
+                        iconHtml = '<i class="fa-solid fa-circle-check text-green-600 mr-2"></i>';
                     } else if (state.quiz.currentInput === option && !state.quiz.isCorrect) {
-                        btnStyle = "bg-rose-100 text-rose-800 border-2 border-rose-400";
-                        icon = '<i class="fa-solid fa-circle-xmark text-rose-500 mr-2"></i>';
+                        btnStyles = "bg-rose-100 text-rose-800 border-2 border-rose-500";
+                        iconHtml = '<i class="fa-solid fa-circle-xmark text-rose-600 mr-2"></i>';
                     } else {
-                        btnStyle = "bg-gray-50 text-gray-400 border-2 border-gray-150 opacity-50 cursor-not-allowed pointer-events-none";
+                        btnStyles = "bg-gray-50 text-gray-400 border border-gray-200 opacity-60 pointer-events-none";
                     }
                 }
 
                 html += `
-                    <button onclick="selectOption('${option}')" ${state.quiz.isAnswerChecked ? 'disabled' : ''}
-                        class="p-4 rounded-2xl text-lg font-black transition-all duration-150 transform active:scale-95 flex items-center justify-center gap-1.5 ${btnStyle}">
-                        <span>${option}</span>
-                        ${icon}
+                    <button onclick="selectOption('${escapeHtml(option)}')" ${state.quiz.isAnswerChecked ? 'disabled' : ''}
+                        class="p-4 rounded-2xl font-black text-xl shadow-sm transition-all duration-200 flex items-center justify-center transform hover:scale-[1.02] active:scale-[0.98] ${btnStyles}">
+                        <span>${escapeHtml(option)}</span>
+                        ${iconHtml}
                     </button>
                 `;
             });
-
             html += `</div>`;
             return html;
         }
 
         function renderSpellingKeyboard() {
-            const rows = [
+            const layout = [
                 ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
                 ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
-                ['⌫', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', 'CLEAR']
+                ['CLEAR', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '⌫']
             ];
 
-            let html = `<div class="flex flex-col gap-1.5 max-w-[340px] md:max-w-md mx-auto">`;
-
-            rows.forEach((row) => {
-                html += `<div class="flex justify-center gap-1">`;
-                row.forEach((key) => {
-                    let keyStyle = "bg-white hover:bg-indigo-50 border border-gray-200 text-indigo-900 font-bold p-2 text-sm md:text-base rounded-lg flex-1 text-center transform active:scale-90 select-none shadow-sm";
+            let html = `<div class="flex flex-col gap-2 items-center">`;
+            layout.forEach(row => {
+                html += `<div class="flex gap-1 justify-center w-full">`;
+                row.forEach(key => {
+                    let btnStyle = "bg-white text-gray-800 border border-gray-200 hover:border-indigo-200 hover:bg-gray-50 text-xs font-bold p-2.5 rounded-lg shadow-sm min-w-[28px] md:min-w-[36px] text-center uppercase";
                     let action = `spellingKeyPress('${key}')`;
 
-                    if (key === '⌫' || key === 'CLEAR') {
-                        keyStyle = "bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 text-xs font-black p-2 rounded-lg flex-1 shadow-sm";
+                    if (key === 'CLEAR') {
+                        btnStyle = "bg-orange-50 text-orange-600 border border-orange-200 font-extrabold text-[10px] px-2 rounded-lg";
+                    } else if (key === '⌫') {
+                        btnStyle = "bg-rose-50 text-rose-500 border border-rose-200 font-extrabold text-sm px-2 rounded-lg";
                     }
 
                     if (state.quiz.isAnswerChecked) {
                         action = '';
-                        keyStyle += " opacity-40 pointer-events-none";
+                        btnStyle += ' opacity-50 cursor-not-allowed pointer-events-none';
                     }
 
                     html += `
-                        <button onclick="${action}" class="${keyStyle}">
+                        <button onclick="${action}" class="transition-all transform active:scale-95 ${btnStyle}">
                             ${key}
                         </button>
                     `;
                 });
                 html += `</div>`;
             });
-
             html += `</div>`;
             return html;
         }
@@ -1178,7 +1210,7 @@
             } else if (key === '⌫') {
                 state.quiz.currentInput = state.quiz.currentInput.slice(0, -1);
             } else {
-                if (state.quiz.currentInput.length < 15) {
+                if (state.quiz.currentInput.length < 20) {
                     state.quiz.currentInput += key.toLowerCase();
                 }
             }
@@ -1412,7 +1444,11 @@
                                 <div class="flex items-center justify-between p-2 rounded-xl text-xs font-bold ${statusColor}">
                                     <div class="flex items-center gap-1.5">
                                         <i class="fa-solid ${icon}"></i>
-                                        <span>${word.emoji}</span>
+                                        <button onclick="pronounceWord('${word.english}')" 
+                                            class="p-1 bg-white hover:bg-indigo-100 text-indigo-600 rounded-lg transition-all border border-indigo-200 shadow-sm ml-1 shrink-0 flex items-center justify-center active:scale-95" 
+                                            title="השמע מילה">
+                                            <i class="fa-solid fa-volume-high text-[10px]"></i>
+                                        </button>
                                         <span class="english-font font-black tracking-wide uppercase">${word.english}</span>
                                         <span class="text-gray-400 font-bold">=</span>
                                         <span>${word.hebrew}</span>
@@ -1569,7 +1605,6 @@
             }));
 
             try {
-                // RULE 1: Strict collection reference path
                 const collectionRef = window.F_collection(db, 'artifacts', appId, 'public', 'data', 'saved_buckets');
                 
                 await window.F_addDoc(collectionRef, {
@@ -1603,7 +1638,6 @@
             }));
 
             try {
-                // RULE 1: Strict collection reference path
                 const docRef = window.F_doc(db, 'artifacts', appId, 'public', 'data', 'saved_buckets', bucketId);
                 
                 await window.F_updateDoc(docRef, {
@@ -1646,7 +1680,6 @@
             }
 
             try {
-                // RULE 1: Strict collection reference path
                 const docRef = window.F_doc(db, 'artifacts', appId, 'public', 'data', 'saved_buckets', state.settings.editingBucketId);
                 
                 await window.F_updateDoc(docRef, {
