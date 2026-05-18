@@ -1,0 +1,1760 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מפתח המילים: תרגול אנגלית אינטראקטיבי</title>
+    <!-- Tailwind CSS for playful modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Heebo for Hebrew, Fredoka for friendly English rounded style -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Heebo:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Heebo', sans-serif;
+            background: linear-gradient(135deg, #a5b4fc 0%, #818cf8 100%);
+            min-height: 100vh;
+        }
+        .english-font {
+            font-family: 'Fredoka', sans-serif;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        @keyframes pop {
+            0% { transform: scale(0.95); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-pop {
+            animation: pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-8px); }
+            75% { transform: translateX(8px); }
+        }
+        .animate-shake {
+            animation: shake 0.2s ease-in-out 2;
+        }
+        /* Toast notification animation */
+        @keyframes slideIn {
+            0% { transform: translateY(-100px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+        .animate-slide-in {
+            animation: slideIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+    </style>
+</head>
+<body class="flex flex-col justify-between p-4 md:p-8">
+
+    <!-- Toast Notification Box -->
+    <div id="toast-container" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 pointer-events-none flex flex-col gap-2 w-full max-w-sm px-4"></div>
+
+    <main class="w-full max-w-2xl mx-auto flex-grow flex items-center justify-center">
+        <div id="app" class="w-full glass-panel rounded-3xl shadow-2xl p-6 md:p-8 transition-all duration-300 relative overflow-hidden min-h-[600px] flex flex-col justify-between">
+            
+            <!-- Dynamic view content injected by JS -->
+            <div id="view-container" class="w-full h-full flex flex-col justify-between flex-grow">
+                <div class="text-center py-20">
+                    <i class="fa-solid fa-graduation-cap fa-spin text-5xl text-indigo-600 mb-4"></i>
+                    <p class="text-lg text-gray-600 font-bold">מתחבר לענן המילים...</p>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Custom Modal for confirmations -->
+    <div id="custom-confirm-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl text-center border border-gray-100 animate-pop">
+            <div class="w-16 h-16 bg-amber-100 text-amber-500 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl shadow-inner">
+                <i class="fa-solid fa-circle-question"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800 mb-2">עצירת התרגול?</h3>
+            <p id="confirm-modal-body" class="text-gray-500 text-sm mb-6 leading-relaxed">האם לצאת למסך הראשי? ההתקדמות הנוכחית לא תישמר.</p>
+            <div class="flex gap-3 justify-center">
+                <button id="confirm-modal-yes" class="flex-1 bg-amber-500 hover:bg-amber-600 text-white font-extrabold py-3 rounded-xl shadow-md transition-all duration-150">
+                    כן, חזור להתחלה
+                </button>
+                <button id="confirm-modal-no" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-extrabold py-3 rounded-xl transition-all duration-150">
+                    המשך לשחק
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Save Bucket Dialog -->
+    <div id="save-bucket-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl text-center border border-gray-100 animate-pop">
+            <div class="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl shadow-inner">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800 mb-1">שמירת דלי מילים בענן</h3>
+            <p class="text-gray-400 text-xs mb-4">תנו לדלי שם ייחודי כדי שתוכלו לחזור אליו ולתרגל שוב ושוב!</p>
+            
+            <input type="text" id="bucket-name-input" placeholder="למשל: המילים הקשות של רון" 
+                class="w-full p-3 border-2 border-indigo-100 rounded-xl focus:outline-none focus:border-indigo-500 font-bold text-center text-gray-700 mb-5">
+            
+            <div id="save-bucket-actions" class="flex flex-col gap-2">
+                <!-- Dynamic save buttons injected by JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Canvas for Celebratory Confetti -->
+    <canvas id="confetti-canvas" class="fixed inset-0 pointer-events-none z-50 w-full h-full hidden"></canvas>
+
+    <!-- Footer -->
+    <footer class="text-center mt-6 text-sm text-indigo-100 flex flex-col items-center gap-1">
+        <div>מפתח המילים באנגלית לגילאי 8-12 🌟🇬🇧</div>
+        <div id="user-id-badge" class="bg-indigo-900/40 text-[10px] tracking-wide font-mono px-3 py-1 rounded-full text-indigo-200 max-w-full truncate"></div>
+    </footer>
+
+    <!-- Firebase System Integration -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Exposing modern Firebase SDK to the global window context
+        window.F_initializeApp = initializeApp;
+        window.F_getAuth = getAuth;
+        window.F_signInAnonymously = signInAnonymously;
+        window.F_signInWithCustomToken = signInWithCustomToken;
+        window.F_onAuthStateChanged = onAuthStateChanged;
+        window.F_getFirestore = getFirestore;
+        window.F_doc = doc;
+        window.F_getDoc = getDoc;
+        window.F_addDoc = addDoc;
+        window.F_setDoc = setDoc;
+        window.F_updateDoc = updateDoc;
+        window.F_deleteDoc = deleteDoc;
+        window.F_onSnapshot = onSnapshot;
+        window.F_collection = collection;
+
+        // Fire initial integration hook
+        triggerFirebaseConnection();
+    </script>
+
+    <script>
+        const VOCABULARY_DATABASE = [
+            // Category: Animals
+            { english: 'butterfly', hebrew: 'פרפר', category: 'animals', emoji: '🦋' },
+            { english: 'elephant', hebrew: 'פיל', category: 'animals', emoji: '🐘' },
+            { english: 'dolphin', hebrew: 'דולפין', category: 'animals', emoji: '🐬' },
+            { english: 'squirrel', hebrew: 'סנאי', category: 'animals', emoji: '🐿️' },
+            { english: 'rabbit', hebrew: 'ארנב', category: 'animals', emoji: '🐇' },
+            { english: 'lion', hebrew: 'אריה', category: 'animals', emoji: '🦁' },
+            { english: 'shark', hebrew: 'כריש', category: 'animals', emoji: '🦈' },
+            { english: 'monkey', hebrew: 'קוף', category: 'animals', emoji: '🐒' },
+            { english: 'giraffe', hebrew: 'ג' + 'ירפה', category: 'animals', emoji: '🦒' },
+            { english: 'penguin', hebrew: 'פינגווין', category: 'animals', emoji: '🐧' },
+
+            // Category: Food
+            { english: 'strawberry', hebrew: 'תות', category: 'food', emoji: '🍓' },
+            { english: 'carrot', hebrew: 'גזר', category: 'food', emoji: '🥕' },
+            { english: 'cheese', hebrew: 'גבינה', category: 'food', emoji: '🧀' },
+            { english: 'bread', hebrew: 'לחם', category: 'food', emoji: '🍞' },
+            { english: 'apple', hebrew: 'תפוח', category: 'food', emoji: '🍎' },
+            { english: 'soup', hebrew: 'מרק', category: 'food', emoji: '🥣' },
+            { english: 'honey', hebrew: 'דבש', category: 'food', emoji: '🍯' },
+            { english: 'watermelon', hebrew: 'אבטיח', category: 'food', emoji: '🍉' },
+            { english: 'chocolate', hebrew: 'שוקולד', category: 'food', emoji: '🍫' },
+            { english: 'orange', hebrew: 'תפוז', category: 'food', emoji: '🍊' },
+
+            // Category: Actions
+            { english: 'running', hebrew: 'לרוץ', category: 'actions', emoji: '🏃' },
+            { english: 'jumping', hebrew: 'לקפוץ', category: 'actions', emoji: '🦘' },
+            { english: 'reading', hebrew: 'לקרוא', category: 'actions', emoji: '📖' },
+            { english: 'writing', hebrew: 'לכתוב', category: 'actions', emoji: '✍️' },
+            { english: 'singing', hebrew: 'לשיר', category: 'actions', emoji: '🎤' },
+            { english: 'sleeping', hebrew: 'לישון', category: 'actions', emoji: '😴' },
+            { english: 'swimming', hebrew: 'לשחות', category: 'actions', emoji: '🏊' },
+            { english: 'laughing', hebrew: 'לצחוק', category: 'actions', emoji: '😂' },
+            { english: 'flying', hebrew: 'לעוף', category: 'actions', emoji: '✈️' },
+            { english: 'dancing', hebrew: 'לרקד', category: 'actions', emoji: '💃' },
+
+            // Category: Adjectives
+            { english: 'happy', hebrew: 'שמח', category: 'adjectives', emoji: '😊' },
+            { english: 'beautiful', hebrew: 'יפה', category: 'adjectives', emoji: '✨' },
+            { english: 'strong', hebrew: 'חזק', category: 'adjectives', emoji: '💪' },
+            { english: 'clever', hebrew: 'חכם', category: 'adjectives', emoji: '🧠' },
+            { english: 'brave', hebrew: 'אמיץ', category: 'adjectives', emoji: '🦁' },
+            { english: 'heavy', hebrew: 'כבד', category: 'adjectives', emoji: '🏋️' },
+            { english: 'quiet', hebrew: 'שקט', category: 'adjectives', emoji: '🤫' },
+            { english: 'bright', hebrew: 'מבריק', category: 'adjectives', emoji: '💡' },
+            { english: 'scared', hebrew: 'מפוחד', category: 'adjectives', emoji: '😨' },
+            { english: 'friendly', hebrew: 'ידידותי', category: 'adjectives', emoji: '🤝' },
+
+            // Category: Home & School
+            { english: 'pencil', hebrew: 'עיפרון', category: 'school', emoji: '✏️' },
+            { english: 'window', hebrew: 'חלון', category: 'school', emoji: '🪟' },
+            { english: 'kitchen', hebrew: 'מטבח', category: 'school', emoji: '🍳' },
+            { english: 'library', hebrew: 'ספרייה', category: 'school', emoji: '📚' },
+            { english: 'computer', hebrew: 'מחשב', category: 'school', emoji: '💻' },
+            { english: 'classroom', hebrew: 'כיתה', category: 'school', emoji: '🏫' },
+            { english: 'garden', hebrew: 'גינה', category: 'school', emoji: '🏡' },
+            { english: 'teacher', hebrew: 'מורה', category: 'school', emoji: '🧑‍🏫' },
+            { english: 'backpack', hebrew: 'ילקוט', category: 'school', emoji: '🎒' },
+            { english: 'bedroom', hebrew: 'חדר שינה', category: 'school', emoji: '🛏️' }
+        ];
+
+        let audioCtx;
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+        
+        function playSound(type) {
+            try {
+                initAudio();
+                if (!audioCtx) return;
+                
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                if (type === 'success') {
+                    const now = audioCtx.currentTime;
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, now);
+                    osc.frequency.setValueAtTime(659.25, now + 0.08);
+                    gain.gain.setValueAtTime(0.12, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                } else if (type === 'error') {
+                    const now = audioCtx.currentTime;
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(160, now);
+                    osc.frequency.exponentialRampToValueAtTime(100, now + 0.25);
+                    gain.gain.setValueAtTime(0.15, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                } else if (type === 'click') {
+                    const now = audioCtx.currentTime;
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(400, now);
+                    gain.gain.setValueAtTime(0.08, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                    osc.start(now);
+                    osc.stop(now + 0.05);
+                } else if (type === 'win') {
+                    const now = audioCtx.currentTime;
+                    const notes = [261.63, 329.63, 392.00, 523.25, 659.25];
+                    notes.forEach((freq, idx) => {
+                        const o = audioCtx.createOscillator();
+                        const g = audioCtx.createGain();
+                        o.connect(g);
+                        g.connect(audioCtx.destination);
+                        o.type = 'sine';
+                        o.frequency.setValueAtTime(freq, now + idx * 0.08);
+                        g.gain.setValueAtTime(0.12, now + idx * 0.08);
+                        g.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.08 + 0.35);
+                        o.start(now + idx * 0.08);
+                        o.stop(now + idx * 0.08 + 0.4);
+                    });
+                }
+            } catch (e) {
+                console.log('Audio disabled/failed:', e);
+            }
+        }
+
+        const state = {
+            view: 'settings', 
+            settingsTab: 'create', // 'create' (create new bucket) | 'cloud' (saved buckets list)
+            settings: {
+                creationMode: 'auto', // 'auto' | 'manual'
+                manualWords: [], // List of manually added {english, hebrew, emoji, category}
+                wordCount: 10,
+                category: 'all', 
+                mode: 'multiple', 
+                useTimer: true,
+                timerDuration: 2,
+                editingBucketId: null, // Track the loaded cloud bucket ID
+                editingBucketName: null // Track the loaded cloud bucket name
+            },
+            quiz: {
+                bucket: [], 
+                currentIndex: 0,
+                timeElapsed: 0,
+                startTime: null,
+                timerInterval: null,
+                currentInput: '',
+                isAnswerChecked: false,
+                isCorrect: false,
+                timeOutReached: false,
+                loadedBucketName: null, // Stores name if active bucket is a loaded cloud bucket
+                editingBucketId: null,
+                editingBucketName: null
+            },
+            firebase: {
+                enabled: false,
+                db: null,
+                auth: null,
+                appId: null,
+                userId: null
+            },
+            savedBuckets: []
+        };
+
+        async function triggerFirebaseConnection() {
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-english-practice';
+            const userIdBadge = document.getElementById('user-id-badge');
+
+            if (typeof __firebase_config !== 'undefined' && __firebase_config) {
+                try {
+                    const firebaseConfig = JSON.parse(__firebase_config);
+                    const app = window.F_initializeApp(firebaseConfig);
+                    const db = window.F_getFirestore(app);
+                    const auth = window.F_getAuth(app);
+
+                    const initialToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+                    let userCred;
+                    if (initialToken) {
+                        userCred = await window.F_signInWithCustomToken(auth, initialToken);
+                    } else {
+                        userCred = await window.F_signInAnonymously(auth);
+                    }
+
+                    const user = userCred.user;
+                    state.firebase = {
+                        enabled: true,
+                        db: db,
+                        auth: auth,
+                        appId: appId,
+                        userId: user.uid
+                    };
+
+                    userIdBadge.innerText = `מזהה משתמש: ${user.uid}`;
+                    
+                    setupRealtimeBucketsListener();
+                } catch (err) {
+                    console.error("Failed to connect with Firebase. Running in Offline mode.", err);
+                    userIdBadge.innerText = "מצב לא מקוון (Offline Mode)";
+                }
+            } else {
+                userIdBadge.innerText = "מצב לא מקוון (Offline Mode)";
+            }
+
+            // Fallback render if Firebase takes time or fails
+            if (state.view === 'settings') {
+                renderView();
+            }
+        }
+
+        function setupRealtimeBucketsListener() {
+            if (!state.firebase.enabled) return;
+            const db = state.firebase.db;
+            const appId = state.firebase.appId;
+
+            // RULE 1: Strict collection reference path
+            const collectionRef = window.F_collection(db, 'artifacts', appId, 'public', 'data', 'saved_buckets');
+
+            // RULE 2: No complex queries, fetch all and sort in memory
+            window.F_onSnapshot(collectionRef, (snapshot) => {
+                state.savedBuckets = [];
+                snapshot.forEach((doc) => {
+                    state.savedBuckets.push({
+                        id: doc.id,
+                        ...doc.data()
+                    });
+                });
+
+                // In-memory sort by creation time (newest first)
+                state.savedBuckets.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+                if (state.view === 'settings' && state.settingsTab === 'cloud') {
+                    renderSavedBucketsList();
+                }
+            }, (error) => {
+                console.error("Realtime update error for buckets:", error);
+                showToast("שגיאה בחיבור לענן המילים", "error");
+            });
+        }
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            let bg = 'bg-emerald-600';
+            let icon = 'fa-circle-check';
+            if (type === 'error') {
+                bg = 'bg-rose-600';
+                icon = 'fa-circle-exclamation';
+            } else if (type === 'info') {
+                bg = 'bg-indigo-600';
+                icon = 'fa-circle-info';
+            }
+
+            toast.className = `${bg} text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 font-bold text-sm text-center animate-slide-in pointer-events-auto`;
+            toast.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${message}</span>`;
+            
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'transition-all', 'duration-300', '-translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function navigate(targetView) {
+            playSound('click');
+            state.view = targetView;
+            if (targetView !== 'quiz') {
+                clearInterval(state.quiz.timerInterval);
+            }
+            renderView();
+        }
+
+        function renderView() {
+            const container = document.getElementById('view-container');
+            container.innerHTML = '';
+            
+            if (state.view === 'settings') {
+                renderSettings(container);
+            } else if (state.view === 'quiz') {
+                renderQuiz(container);
+            } else if (state.view === 'results') {
+                renderResults(container);
+            }
+        }
+
+        function renderSettings(container) {
+            container.className = "animate-pop flex flex-col justify-between h-full";
+            
+            const isManualEmpty = state.settings.creationMode === 'manual' && state.settings.manualWords.length === 0;
+
+            container.innerHTML = `
+                <!-- Header -->
+                <div class="text-center mb-4">
+                    <div class="inline-flex items-center justify-center w-14 h-14 bg-indigo-100 text-indigo-600 rounded-2xl mb-1.5 shadow-inner">
+                        <i class="fa-solid fa-language text-3xl"></i>
+                    </div>
+                    <h1 class="text-2xl font-black text-indigo-900 tracking-tight">מפתח המילים באנגלית</h1>
+                    <p class="text-gray-500 text-xs mt-0.5">תרגול אינטראקטיבי מהנה מותאם לגילאי 8 עד 12</p>
+                </div>
+
+                <!-- Navigation Tabs between settings generator and Cloud buckets list -->
+                <div class="flex rounded-2xl bg-indigo-50 p-1 mb-4 border border-indigo-100">
+                    <button onclick="setSettingsTab('create')" class="flex-1 py-2 text-center text-xs font-black rounded-xl transition-all ${state.settingsTab === 'create' ? 'bg-indigo-600 text-white shadow' : 'text-indigo-700 hover:text-indigo-950'}">
+                        <i class="fa-solid fa-magic-wand-sparkles ml-1"></i>צור דלי מילים חדש
+                    </button>
+                    <button onclick="setSettingsTab('cloud')" class="flex-1 py-2 text-center text-xs font-black rounded-xl transition-all ${state.settingsTab === 'cloud' ? 'bg-indigo-600 text-white shadow' : 'text-indigo-700 hover:text-indigo-950'}">
+                        <i class="fa-solid fa-cloud-arrow-down ml-1"></i>דליים שמורים בענן ☁️
+                    </button>
+                </div>
+
+                <!-- Dynamic Workspace panel depending on Active Tab -->
+                <div class="flex-grow overflow-y-auto px-1 max-h-[340px] md:max-h-none pr-1" id="settings-workspace">
+                    ${state.settingsTab === 'create' ? renderCreateSettingsForm() : renderSavedBucketsSection()}
+                </div>
+
+                <!-- Footer action to start -->
+                <div class="mt-4 pt-3 border-t border-indigo-50">
+                    ${state.settingsTab === 'create' ? `
+                        <button onclick="${isManualEmpty ? 'void(0)' : 'startVocabularyPractice(false)'}" 
+                            id="start-practice-btn"
+                            class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black text-base py-3.5 px-6 rounded-2xl shadow-lg hover:shadow-xl transition-all disabled:bg-gray-300 disabled:cursor-not-allowed disabled:shadow-none"
+                            ${isManualEmpty ? 'disabled' : ''}>
+                            בואו נתחיל לשחק! <i class="fa-solid fa-circle-play mr-1"></i>
+                        </button>
+                    ` : `
+                        <p class="text-center text-xs text-indigo-500 font-bold">בחרו דלי מתוך הרשימה מעל כדי להתחיל לתרגל!</p>
+                    `}
+                </div>
+            `;
+        }
+
+        function setSettingsTab(tab) {
+            playSound('click');
+            state.settingsTab = tab;
+            renderView();
+        }
+
+        function setCreationMode(mode) {
+            playSound('click');
+            state.settings.creationMode = mode;
+            renderView();
+        }
+
+        function renderCreateSettingsForm() {
+            return `
+                <!-- Creation Mode Toggle -->
+                <div>
+                    <label class="block text-xs font-black text-gray-700 mb-1.5">כיצד תרצו להרכיב את דלי המילים?</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="setCreationMode('auto')" class="py-2.5 text-xs text-center font-black rounded-xl border-2 transition-all duration-150 ${state.settings.creationMode === 'auto' ? 'border-indigo-600 bg-indigo-50 text-indigo-800' : 'border-gray-200 text-gray-600 hover:bg-gray-50' }">
+                            <i class="fa-solid fa-wand-magic-sparkles ml-1"></i>חולל אוטומטית מהמאגר
+                        </button>
+                        <button onclick="setCreationMode('manual')" class="py-2.5 text-xs text-center font-black rounded-xl border-2 transition-all duration-150 ${state.settings.creationMode === 'manual' ? 'border-indigo-600 bg-indigo-50 text-indigo-800' : 'border-gray-200 text-gray-600 hover:bg-gray-50' }">
+                            <i class="fa-solid fa-pen-to-square ml-1"></i>הוספת מילים בצורה ידנית
+                        </button>
+                    </div>
+                </div>
+
+                ${state.settings.creationMode === 'auto' ? renderAutoSettings() : renderManualWordBuilder()}
+            `;
+        }
+
+        function renderAutoSettings() {
+            return `
+                <!-- Word Count Selector -->
+                <div>
+                    <label class="block text-xs font-black text-gray-700 mb-1.5">כמה מילים נרצה לתרגל?</label>
+                    <div class="grid grid-cols-4 gap-2">
+                        ${[5, 10, 15, 20].map(num => `
+                            <button onclick="setWordCount(${num})" class="py-2 text-xs text-center font-extrabold rounded-xl border-2 transition-all duration-200 ${state.settings.wordCount === num ? 'border-indigo-600 bg-indigo-50 text-indigo-800' : 'border-gray-200 text-gray-600 hover:bg-gray-50' }">
+                                ${num} מילים
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <!-- Category Selector -->
+                <div>
+                    <label class="block text-xs font-black text-gray-700 mb-1.5">בחרו קטגוריה / נושא:</label>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs">
+                        ${[
+                            { id: 'all', label: 'הכל מעורב', emoji: '📚' },
+                            { id: 'animals', label: 'חיות מחמד ובר', emoji: '🦁' },
+                            { id: 'food', label: 'אוכל ופירות', emoji: '🍓' },
+                            { id: 'actions', label: 'פעולות ופעלים', emoji: '🏃' },
+                            { id: 'adjectives', label: 'מילות תואר', emoji: '✨' },
+                            { id: 'school', label: 'בית ובית ספר', emoji: '🏫' }
+                        ].map(cat => `
+                            <button onclick="setCategory('${cat.id}')" class="p-2 rounded-xl border-2 font-bold flex items-center justify-center gap-1.5 transition-all ${state.settings.category === cat.id ? 'border-indigo-600 bg-indigo-50 text-indigo-800' : 'border-gray-200 hover:bg-gray-50 text-gray-700'}">
+                                <span>${cat.emoji}</span> ${cat.label}
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <!-- Game Configuration parameters -->
+                ${renderSharedPracticeControls()}
+            `;
+        }
+
+        function renderManualWordBuilder() {
+            let loadSectionHtml = '';
+            if (state.firebase.enabled && state.savedBuckets.length > 0) {
+                loadSectionHtml = `
+                    <div class="bg-indigo-50/40 p-3 rounded-2xl border border-indigo-100 mb-3 text-right">
+                        <label class="block text-xs font-black text-indigo-950 mb-1"><i class="fa-solid fa-cloud-arrow-down ml-1"></i>רוצים להוסיף מילים לדלי קיים מהענן?</label>
+                        <div class="flex gap-2">
+                            <select id="load-bucket-select" class="flex-grow p-2 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 font-bold text-gray-700 bg-white">
+                                <option value="">-- בחרו דלי לעריכה --</option>
+                                ${state.savedBuckets.map(b => `<option value="${b.id}" ${state.settings.editingBucketId === b.id ? 'selected' : ''}>${escapeHtml(b.name)} (${b.words.length} מילים)</option>`).join('')}
+                            </select>
+                            <button onclick="loadBucketForEditing()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-black px-3.5 py-2 rounded-xl text-xs transition-all shadow-sm shrink-0">
+                                טען דלי
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            let editingBannerHtml = '';
+            if (state.settings.editingBucketId) {
+                editingBannerHtml = `
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 text-xs font-bold mb-3 gap-2 animate-pop">
+                        <span class="flex items-center gap-1.5">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                            <span>עורכים דלי: <strong>${escapeHtml(state.settings.editingBucketName)}</strong> (${state.settings.manualWords.length} מילים)</span>
+                        </span>
+                        <div class="flex gap-2 shrink-0 justify-end">
+                            <button onclick="saveManualEditsToCloud()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold px-3 py-1.5 rounded-lg text-[10px] transition-all shadow-sm flex items-center gap-1">
+                                <i class="fa-solid fa-floppy-disk"></i> שמור שינויים בענן
+                            </button>
+                            <button onclick="cancelEditingBucket()" class="text-rose-600 hover:underline text-[10px] font-black">
+                                נקה / בטל עריכה
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            const listHtml = state.settings.manualWords.length === 0 
+                ? `<div class="text-center text-gray-400 text-xs py-5 bg-indigo-50/20 border border-dashed border-indigo-100 rounded-xl">אין עדיין מילים בדלי. הוסיפו מילים בטופס מעל!</div>`
+                : state.settings.manualWords.map((w, idx) => `
+                    <div class="flex items-center justify-between p-2 bg-white rounded-xl border border-indigo-100 text-xs">
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm select-none">${w.emoji}</span>
+                            <span class="english-font font-bold uppercase tracking-wide text-indigo-950">${escapeHtml(w.english)}</span>
+                            <span class="text-indigo-300 font-bold">=</span>
+                            <span class="font-bold text-gray-700">${escapeHtml(w.hebrew)}</span>
+                        </div>
+                        <button onclick="deleteManualWord(${idx})" class="text-rose-500 hover:text-rose-700 p-1 hover:bg-rose-50 rounded-lg transition-all">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                `).join('');
+
+            return `
+                ${loadSectionHtml}
+                ${editingBannerHtml}
+                <!-- Manual Add Word Panel -->
+                <div class="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100 space-y-3">
+                    <h4 class="text-xs font-black text-indigo-900"><i class="fa-solid fa-plus-circle ml-1"></i>הוספת מילה חדשה לדלי שלכם</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <!-- English Input -->
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-500 mb-1">המילה באנגלית:</label>
+                            <input type="text" id="manual-english" placeholder="למשל: apple" dir="ltr"
+                                onkeydown="if(event.key === 'Enter') addManualWord()"
+                                class="w-full p-2 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 font-bold english-font">
+                        </div>
+                        <!-- Hebrew Input -->
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-500 mb-1">התרגום בעברית:</label>
+                            <input type="text" id="manual-hebrew" placeholder="למשל: תפוח"
+                                onkeydown="if(event.key === 'Enter') addManualWord()"
+                                class="w-full p-2 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 font-bold">
+                        </div>
+                        <!-- Emoji Picker input -->
+                        <div>
+                            <label class="block text-[10px] font-bold text-gray-500 mb-1">אמוג'י (אופציונלי):</label>
+                            <div class="flex gap-2">
+                                <input type="text" id="manual-emoji" placeholder="🍎" value="✏️"
+                                    onkeydown="if(event.key === 'Enter') addManualWord()"
+                                    class="w-full p-2 text-xs border border-gray-200 rounded-xl text-center focus:outline-none focus:border-indigo-500 font-bold">
+                                <button onclick="addManualWord()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-black px-4 py-2 rounded-xl text-xs transition-all shadow-md shrink-0">
+                                    הוסף
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Realtime Added List -->
+                <div>
+                    <div class="flex justify-between items-center mb-1.5">
+                        <label class="block text-xs font-black text-gray-700">המילים שהוספתם (${state.settings.manualWords.length}):</label>
+                        ${state.settings.manualWords.length > 0 ? `
+                            <button onclick="clearAllManualWords()" class="text-[10px] text-rose-600 font-bold hover:underline">
+                                <i class="fa-solid fa-trash-can ml-0.5"></i>מחק הכל
+                            </button>
+                        ` : ''}
+                    </div>
+                    <div class="space-y-1.5 max-h-[140px] overflow-y-auto pr-1">
+                        ${listHtml}
+                    </div>
+                </div>
+
+                <!-- Shared Game parameters -->
+                ${renderSharedPracticeControls()}
+            `;
+        }
+
+        function renderSharedPracticeControls() {
+            return `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                    <!-- Mode Selector -->
+                    <div>
+                        <label class="block text-xs font-black text-gray-700 mb-1">מצב משחק:</label>
+                        <div class="flex rounded-xl bg-gray-100 p-1">
+                            <button onclick="setGameMode('multiple')" class="flex-1 py-1.5 text-center text-[10px] font-bold rounded-lg transition-all ${state.settings.mode === 'multiple' ? 'bg-white text-indigo-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}">
+                                <i class="fa-solid fa-list-check ml-1"></i>רב-ברירה
+                            </button>
+                            <button onclick="setGameMode('spelling')" class="flex-1 py-1.5 text-center text-[10px] font-bold rounded-lg transition-all ${state.settings.mode === 'spelling' ? 'bg-white text-indigo-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}">
+                                <i class="fa-solid fa-keyboard ml-1"></i>איות (כתיבה)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Timer Switch -->
+                    <div>
+                        <label class="block text-xs font-black text-gray-700 mb-1">הגבלת זמן לתרגול:</label>
+                        <div class="flex items-center justify-between p-1.5 bg-gray-50 border border-gray-100 rounded-xl text-[10px] font-bold">
+                            <span class="text-gray-600">טיימר פעיל</span>
+                            <select onchange="state.settings.timerDuration = parseInt(this.value)" class="p-1 rounded-lg border border-gray-300 bg-white font-bold text-gray-700 focus:outline-none">
+                                <option value="1" ${state.settings.timerDuration === 1 ? 'selected' : ''}>דקה 1</option>
+                                <option value="2" ${state.settings.timerDuration === 2 ? 'selected' : ''}>2 דקות</option>
+                                <option value="3" ${state.settings.timerDuration === 3 ? 'selected' : ''}>3 דקות</option>
+                                <option value="5" ${state.settings.timerDuration === 5 ? 'selected' : ''}>5 דקות</option>
+                                <option value="0" ${state.settings.timerDuration === 0 ? 'selected' : ''}>ללא הגבלה</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function addManualWord() {
+            const engEl = document.getElementById('manual-english');
+            const hebEl = document.getElementById('manual-hebrew');
+            const emoEl = document.getElementById('manual-emoji');
+
+            if (!engEl || !hebEl) return;
+
+            const english = engEl.value.trim().toLowerCase();
+            const hebrew = hebEl.value.trim();
+            const emoji = (emoEl && emoEl.value.trim()) ? emoEl.value.trim() : '✏️';
+
+            if (!english || !hebrew) {
+                showToast("אנא מלאו את המילה באנגלית ותרגומה בעברית", "error");
+                return;
+            }
+
+            // Standard character check
+            if (!/^[a-zA-Z\s-]+$/.test(english)) {
+                showToast("המילה באנגלית חייבת להכיל אותיות באנגלית בלבד", "error");
+                return;
+            }
+
+            state.settings.manualWords.push({
+                english: english,
+                hebrew: hebrew,
+                emoji: emoji,
+                category: 'custom'
+            });
+
+            playSound('click');
+            renderView();
+            showToast("המילה הוספה בהצלחה!");
+            
+            // Refocus english field for seamless typing flow
+            setTimeout(() => {
+                const newEngEl = document.getElementById('manual-english');
+                if (newEngEl) newEngEl.focus();
+            }, 50);
+        }
+
+        function deleteManualWord(index) {
+            playSound('click');
+            state.settings.manualWords.splice(index, 1);
+            renderView();
+        }
+
+        function loadBucketForEditing() {
+            const select = document.getElementById('load-bucket-select');
+            if (!select) return;
+            const bucketId = select.value;
+            if (!bucketId) {
+                showToast("אנא בחרו דלי מהרשימה", "error");
+                return;
+            }
+            playSound('click');
+            const bucket = state.savedBuckets.find(b => b.id === bucketId);
+            if (!bucket) {
+                showToast("דלי המילים לא נמצא", "error");
+                return;
+            }
+            // Populate manualWords with existing bucket words
+            state.settings.manualWords = bucket.words.map(w => ({ ...w }));
+            state.settings.editingBucketId = bucket.id;
+            state.settings.editingBucketName = bucket.name;
+            renderView();
+            showToast(`הדלי "${bucket.name}" נטען בהצלחה! תוכלו להוסיף או להסיר מילים.`, "success");
+        }
+
+        function cancelEditingBucket() {
+            playSound('click');
+            state.settings.manualWords = [];
+            state.settings.editingBucketId = null;
+            state.settings.editingBucketName = null;
+            renderView();
+            showToast("העריכה בוטלה והרשימה רוקנה", "info");
+        }
+
+        function clearAllManualWords() {
+            playSound('click');
+            state.settings.manualWords = [];
+            state.settings.editingBucketId = null;
+            state.settings.editingBucketName = null;
+            renderView();
+            showToast("הדלי הידני רוקן לחלוטין", "info");
+        }
+
+        function renderSavedBucketsSection() {
+            if (!state.firebase.enabled) {
+                return `
+                    <div class="text-center py-10 bg-rose-50 border border-rose-100 rounded-2xl">
+                        <i class="fa-solid fa-cloud-slash text-4xl text-rose-400 mb-2"></i>
+                        <h4 class="font-black text-rose-800 text-sm">הענן אינו מחובר</h4>
+                        <p class="text-rose-600 text-xs px-4 mt-1">כדי להשתמש בדליים השמורים בענן, יש להפעיל את האפליקציה בסביבה מקוונת התומכת בשרת.</p>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="space-y-2" id="buckets-realtime-list">
+                    ${renderSavedBucketsList()}
+                </div>
+            `;
+        }
+
+        function renderSavedBucketsList() {
+            const listEl = document.getElementById('buckets-realtime-list');
+            if (state.savedBuckets.length === 0) {
+                const emptyHtml = `
+                    <div class="text-center py-12 bg-indigo-50/50 border border-indigo-100 rounded-2xl">
+                        <i class="fa-solid fa-folder-open text-4xl text-indigo-300 mb-2"></i>
+                        <h4 class="font-black text-indigo-900 text-sm">אין עדיין דליים שמורים בענן</h4>
+                        <p class="text-indigo-600 text-[10px] px-6 mt-1">שחקו משחק, ובסיום תוכלו לשמור את המילים שלכם בענן כדי שהן יופיעו כאן לכולם!</p>
+                    </div>
+                `;
+                if (listEl) listEl.innerHTML = emptyHtml;
+                return emptyHtml;
+            }
+
+            const listHtml = state.savedBuckets.map(b => {
+                const emojis = b.words.slice(0, 6).map(w => w.emoji).join(' ');
+                const dateStr = b.createdAt ? new Date(b.createdAt).toLocaleDateString('he-IL') : 'תאריך לא ידוע';
+                return `
+                    <div class="p-3 bg-white border border-indigo-100 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-2 hover:border-indigo-300 hover:shadow-sm transition-all">
+                        <div class="flex-grow">
+                            <h4 class="font-black text-indigo-950 text-sm leading-tight">${escapeHtml(b.name)}</h4>
+                            <div class="flex items-center gap-1.5 text-[10px] text-indigo-500 font-bold mt-1">
+                                <span class="bg-indigo-50 px-2 py-0.5 rounded-full">${b.words.length} מילים</span>
+                                <span>•</span>
+                                <span>נוצר ב-${dateStr}</span>
+                            </div>
+                            <div class="text-base select-none mt-1.5 filter drop-shadow-sm">${emojis} ${b.words.length > 6 ? '...' : ''}</div>
+                        </div>
+                        <div class="flex gap-1.5 w-full md:w-auto">
+                            <button onclick="playSavedCloudBucket('${b.id}')" 
+                                class="flex-1 md:flex-none bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs px-3.5 py-2 rounded-xl transition-all shadow-sm">
+                                <i class="fa-solid fa-play ml-1"></i>התחל תרגול
+                            </button>
+                            ${b.createdBy === state.firebase.userId ? `
+                                <button onclick="deleteSavedCloudBucket('${b.id}')" 
+                                    class="bg-rose-50 hover:bg-rose-100 text-rose-500 p-2 rounded-xl transition-all border border-rose-100" title="מחק דלי">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            if (listEl) listEl.innerHTML = listHtml;
+            return listHtml;
+        }
+
+        function playSavedCloudBucket(bucketId) {
+            playSound('click');
+            const targetBucket = state.savedBuckets.find(b => b.id === bucketId);
+            if (!targetBucket) {
+                showToast("לא מצאנו את דלי המילים המבוקש", "error");
+                return;
+            }
+
+            // Map standard layout with initial properties
+            state.quiz.bucket = targetBucket.words.map(w => {
+                const wordCopy = { ...w };
+                wordCopy.options = generateMultipleChoiceDistractors(wordCopy);
+                wordCopy.userAnswer = null;
+                wordCopy.isCorrect = false;
+                return wordCopy;
+            }).sort(() => Math.random() - 0.5);
+
+            state.quiz.loadedBucketName = targetBucket.name;
+
+            // Reset quiz metrics
+            state.quiz.currentIndex = 0;
+            state.quiz.timeElapsed = 0;
+            state.quiz.currentInput = '';
+            state.quiz.isAnswerChecked = false;
+            state.quiz.isCorrect = false;
+            state.quiz.timeOutReached = false;
+
+            // Start timer
+            startPracticeTimer();
+            navigate('quiz');
+        }
+
+        async function deleteSavedCloudBucket(bucketId) {
+            playSound('click');
+            if (!state.firebase.enabled) return;
+
+            const db = state.firebase.db;
+            const appId = state.firebase.appId;
+
+            showConfirmDialog("האם אתם בטוחים שברצונכם למחוק לצמיתות דלי מילים זה?", async () => {
+                try {
+                    const docRef = window.F_doc(db, 'artifacts', appId, 'public', 'data', 'saved_buckets', bucketId);
+                    await window.F_deleteDoc(docRef);
+                    showToast("הדלי נמחק בהצלחה!", "success");
+                } catch (e) {
+                    console.error("Error deleting bucket:", e);
+                    showToast("שגיאה במחיקת הדלי מהענן", "error");
+                }
+            });
+        }
+
+        function setWordCount(count) {
+            playSound('click');
+            state.settings.wordCount = count;
+            renderView();
+        }
+
+        function setCategory(cat) {
+            playSound('click');
+            state.settings.category = cat;
+            renderView();
+        }
+
+        function setGameMode(mode) {
+            playSound('click');
+            state.settings.mode = mode;
+            renderView();
+        }
+
+        function startVocabularyPractice(isRepeat = false) {
+            state.quiz.loadedBucketName = null; // Fresh session
+
+            if (!isRepeat) {
+                let pool = [];
+                if (state.settings.creationMode === 'manual') {
+                    pool = [...state.settings.manualWords];
+                    state.quiz.editingBucketId = state.settings.editingBucketId;
+                    state.quiz.editingBucketName = state.settings.editingBucketName;
+                } else {
+                    pool = VOCABULARY_DATABASE;
+                    if (state.settings.category !== 'all') {
+                        pool = VOCABULARY_DATABASE.filter(w => w.category === state.settings.category);
+                    }
+                    state.quiz.editingBucketId = null;
+                    state.quiz.editingBucketName = null;
+                }
+                
+                pool = [...pool].sort(() => Math.random() - 0.5);
+                
+                const count = state.settings.creationMode === 'manual' 
+                    ? pool.length 
+                    : Math.min(state.settings.wordCount, pool.length);
+
+                state.quiz.bucket = pool.slice(0, count).map(word => {
+                    const distractors = generateMultipleChoiceDistractors(word);
+                    return {
+                        ...word,
+                        options: distractors,
+                        userAnswer: null,
+                        isCorrect: false
+                    };
+                });
+            } else {
+                state.quiz.bucket.forEach(word => {
+                    word.userAnswer = null;
+                    word.isCorrect = false;
+                });
+                state.quiz.bucket = state.quiz.bucket.sort(() => Math.random() - 0.5);
+            }
+
+            state.quiz.currentIndex = 0;
+            state.quiz.timeElapsed = 0;
+            state.quiz.currentInput = '';
+            state.quiz.isAnswerChecked = false;
+            state.quiz.isCorrect = false;
+            state.quiz.timeOutReached = false;
+
+            startPracticeTimer();
+            navigate('quiz');
+        }
+
+        function startPracticeTimer() {
+            clearInterval(state.quiz.timerInterval);
+            if (state.settings.timerDuration > 0) {
+                state.quiz.startTime = Date.now();
+                state.quiz.timerInterval = setInterval(() => {
+                    state.quiz.timeElapsed = Math.floor((Date.now() - state.quiz.startTime) / 1000);
+                    
+                    const totalSecs = state.settings.timerDuration * 60;
+                    const timeLeft = totalSecs - state.quiz.timeElapsed;
+                    
+                    if (timeLeft <= 0) {
+                        clearInterval(state.quiz.timerInterval);
+                        state.quiz.timeOutReached = true;
+                        finishPractice();
+                        return;
+                    }
+
+                    const timerEl = document.getElementById('timer-display');
+                    if (timerEl) {
+                        timerEl.innerText = formatTime(timeLeft);
+                        if (timeLeft <= 10) {
+                            timerEl.parentElement.className = "flex items-center space-x-1 space-x-reverse font-mono px-3 py-1 rounded-xl border border-red-200 text-red-600 bg-red-50 animate-pulse transition-all";
+                        }
+                    }
+                }, 1000);
+            }
+        }
+
+        function formatTime(sec) {
+            if (sec < 0) sec = 0;
+            const mins = Math.floor(sec / 60);
+            const remainingSecs = sec % 60;
+            return `${mins.toString().padStart(2, '0')}:${remainingSecs.toString().padStart(2, '0')}`;
+        }
+
+        function generateMultipleChoiceDistractors(word) {
+            const correctMeaning = word.hebrew;
+            const optionsSet = new Set([correctMeaning]);
+            
+            const pool = VOCABULARY_DATABASE.filter(w => w.hebrew !== correctMeaning);
+            const sameCatPool = pool.filter(w => w.category === word.category);
+            
+            const sourcePool = sameCatPool.length >= 3 ? sameCatPool : pool;
+            const shuffledSource = [...sourcePool].sort(() => Math.random() - 0.5);
+
+            while(optionsSet.size < 4 && shuffledSource.length > 0) {
+                const item = shuffledSource.pop();
+                optionsSet.add(item.hebrew);
+            }
+
+            return Array.from(optionsSet).sort(() => Math.random() - 0.5);
+        }
+
+        function renderQuiz(container) {
+            container.className = "animate-pop flex flex-col justify-between h-full";
+            
+            const currentWord = state.quiz.bucket[state.quiz.currentIndex];
+            const progressPercent = (state.quiz.currentIndex / state.quiz.bucket.length) * 100;
+
+            let timerHtml = '';
+            if (state.settings.timerDuration > 0) {
+                const totalSecs = state.settings.timerDuration * 60;
+                const timeLeft = totalSecs - state.quiz.timeElapsed;
+                timerHtml = `
+                    <div class="flex items-center space-x-1 space-x-reverse font-mono px-3 py-1 rounded-xl border border-indigo-100 text-indigo-600 bg-indigo-50">
+                        <i class="fa-solid fa-hourglass-half ml-1"></i>
+                        <span id="timer-display" class="font-bold text-sm">${formatTime(timeLeft)}</span>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = `
+                <!-- Top Header -->
+                <div class="flex items-center justify-between mb-4">
+                    <button onclick="confirmExit()" class="text-xs font-bold text-gray-400 hover:text-rose-500 hover:bg-rose-50 py-1.5 px-3 rounded-xl transition-all">
+                        <i class="fa-solid fa-xmark ml-1"></i> ביטול ויציאה
+                    </button>
+                    
+                    <div class="flex items-center gap-2">
+                        ${timerHtml}
+                        <div class="text-xs font-black bg-gray-100 text-indigo-700 px-3 py-1.5 rounded-xl">
+                            ${state.quiz.loadedBucketName ? `<i class="fa-solid fa-cloud ml-1"></i> ${escapeHtml(state.quiz.loadedBucketName)} | ` : ''}מילה ${state.quiz.currentIndex + 1} מתוך ${state.quiz.bucket.length}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="w-full bg-gray-100 h-2 rounded-full mb-6 overflow-hidden">
+                    <div class="bg-indigo-600 h-full rounded-full transition-all duration-300" style="width: ${progressPercent}%"></div>
+                </div>
+
+                <!-- Main Display Section -->
+                <div id="quiz-workspace" class="flex-grow flex flex-col justify-center items-center py-2 relative">
+                    
+                    <!-- Word Box Card -->
+                    <div class="text-center mb-6">
+                        <div class="text-5xl md:text-6xl mb-3 select-none filter drop-shadow">${currentWord.emoji}</div>
+                        
+                        ${state.settings.mode === 'multiple' ? `
+                            <!-- English word displayed large (Multiple choice mode) -->
+                            <h2 class="english-font text-4xl md:text-5xl font-extrabold text-indigo-900 leading-tight tracking-wide select-none">
+                                ${currentWord.english}
+                            </h2>
+                            <p class="text-gray-400 text-sm mt-1 font-bold">מה הפירוש הנכון בעברית?</p>
+                        ` : `
+                            <!-- Hebrew word displayed (Spelling/Keyboard mode) -->
+                            <h2 class="text-3xl md:text-4xl font-black text-indigo-900 leading-tight select-none">
+                                ${currentWord.hebrew}
+                            </h2>
+                            <p class="text-gray-400 text-sm mt-1 font-bold">איך כותבים את המילה באנגלית?</p>
+                            
+                            <!-- Spelling field -->
+                            <div class="mt-4 flex justify-center">
+                                <input type="text" id="spelling-field" readonly value="${state.quiz.currentInput}" placeholder="הקלידו באנגלית..."
+                                    class="english-font text-center font-extrabold text-3xl md:text-4xl border-b-4 border-indigo-600 focus:outline-none bg-transparent placeholder-indigo-200 w-64 uppercase py-1.5">
+                            </div>
+                        `}
+                    </div>
+
+                    <!-- Answer Options / Spelling Keyboard -->
+                    <div class="w-full max-w-md mx-auto">
+                        ${state.settings.mode === 'multiple' ? renderOptionsList(currentWord) : renderSpellingKeyboard()}
+                    </div>
+
+                </div>
+
+                <!-- Bottom action area -->
+                <div class="mt-6 pt-4 border-t border-gray-100" id="action-area">
+                    ${renderActionControls()}
+                </div>
+            `;
+
+            if (state.settings.mode === 'spelling') {
+                setupPhysicalKeyboardListeners();
+            }
+        }
+
+        function renderOptionsList(word) {
+            let html = `<div class="grid grid-cols-2 gap-3">`;
+            
+            word.options.forEach((option) => {
+                let btnStyle = "bg-white hover:bg-indigo-50 text-gray-800 border-2 border-gray-200 hover:border-indigo-400";
+                let icon = "";
+
+                if (state.quiz.isAnswerChecked) {
+                    if (option === word.hebrew) {
+                        btnStyle = "bg-green-100 text-green-800 border-2 border-green-500 shadow-sm";
+                        icon = '<i class="fa-solid fa-circle-check text-green-600 mr-2"></i>';
+                    } else if (state.quiz.currentInput === option && !state.quiz.isCorrect) {
+                        btnStyle = "bg-rose-100 text-rose-800 border-2 border-rose-400";
+                        icon = '<i class="fa-solid fa-circle-xmark text-rose-500 mr-2"></i>';
+                    } else {
+                        btnStyle = "bg-gray-50 text-gray-400 border-2 border-gray-150 opacity-50 cursor-not-allowed pointer-events-none";
+                    }
+                }
+
+                html += `
+                    <button onclick="selectOption('${option}')" ${state.quiz.isAnswerChecked ? 'disabled' : ''}
+                        class="p-4 rounded-2xl text-lg font-black transition-all duration-150 transform active:scale-95 flex items-center justify-center gap-1.5 ${btnStyle}">
+                        <span>${option}</span>
+                        ${icon}
+                    </button>
+                `;
+            });
+
+            html += `</div>`;
+            return html;
+        }
+
+        function renderSpellingKeyboard() {
+            const rows = [
+                ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
+                ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
+                ['⌫', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', 'CLEAR']
+            ];
+
+            let html = `<div class="flex flex-col gap-1.5 max-w-[340px] md:max-w-md mx-auto">`;
+
+            rows.forEach((row) => {
+                html += `<div class="flex justify-center gap-1">`;
+                row.forEach((key) => {
+                    let keyStyle = "bg-white hover:bg-indigo-50 border border-gray-200 text-indigo-900 font-bold p-2 text-sm md:text-base rounded-lg flex-1 text-center transform active:scale-90 select-none shadow-sm";
+                    let action = `spellingKeyPress('${key}')`;
+
+                    if (key === '⌫' || key === 'CLEAR') {
+                        keyStyle = "bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-600 text-xs font-black p-2 rounded-lg flex-1 shadow-sm";
+                    }
+
+                    if (state.quiz.isAnswerChecked) {
+                        action = '';
+                        keyStyle += " opacity-40 pointer-events-none";
+                    }
+
+                    html += `
+                        <button onclick="${action}" class="${keyStyle}">
+                            ${key}
+                        </button>
+                    `;
+                });
+                html += `</div>`;
+            });
+
+            html += `</div>`;
+            return html;
+        }
+
+        function spellingKeyPress(key) {
+            if (state.quiz.isAnswerChecked) return;
+            playSound('click');
+
+            if (key === 'CLEAR') {
+                state.quiz.currentInput = '';
+            } else if (key === '⌫') {
+                state.quiz.currentInput = state.quiz.currentInput.slice(0, -1);
+            } else {
+                if (state.quiz.currentInput.length < 15) {
+                    state.quiz.currentInput += key.toLowerCase();
+                }
+            }
+
+            const field = document.getElementById('spelling-field');
+            if (field) {
+                field.value = state.quiz.currentInput;
+            }
+
+            const checkBtn = document.getElementById('check-answer-btn');
+            if (checkBtn) {
+                checkBtn.disabled = state.quiz.currentInput === '';
+            }
+        }
+
+        function selectOption(val) {
+            if (state.quiz.isAnswerChecked) return;
+            state.quiz.currentInput = val;
+            checkVocabularyAnswer();
+        }
+
+        function checkVocabularyAnswer() {
+            if (state.quiz.currentInput === '') return;
+
+            const currentQ = state.quiz.bucket[state.quiz.currentIndex];
+            let isCorrect = false;
+
+            if (state.settings.mode === 'multiple') {
+                isCorrect = state.quiz.currentInput === currentQ.hebrew;
+            } else {
+                isCorrect = state.quiz.currentInput.trim().toLowerCase() === currentQ.english.trim().toLowerCase();
+            }
+
+            state.quiz.isAnswerChecked = true;
+            state.quiz.isCorrect = isCorrect;
+            currentQ.isCorrect = isCorrect;
+            currentQ.userAnswer = state.quiz.currentInput;
+
+            const workspace = document.getElementById('quiz-workspace');
+            
+            if (isCorrect) {
+                playSound('success');
+                workspace.innerHTML += `
+                    <div class="absolute inset-0 flex items-center justify-center bg-green-500 bg-opacity-10 pointer-events-none rounded-3xl animate-pop">
+                        <div class="bg-green-500 text-white rounded-full p-4 shadow-lg text-4xl animate-bounce">
+                            <i class="fa-solid fa-check"></i>
+                        </div>
+                    </div>
+                `;
+            } else {
+                playSound('error');
+                workspace.classList.add('animate-shake');
+                setTimeout(() => workspace.classList.remove('animate-shake'), 400);
+
+                workspace.innerHTML += `
+                    <div class="absolute inset-0 flex items-center justify-center bg-rose-500 bg-opacity-10 pointer-events-none rounded-3xl animate-pop">
+                        <div class="bg-rose-500 text-white rounded-full p-4 shadow-lg text-4xl">
+                            <i class="fa-solid fa-xmark"></i>
+                        </div>
+                    </div>
+                `;
+            }
+
+            const actionArea = document.getElementById('action-area');
+            if (actionArea) {
+                actionArea.innerHTML = renderActionControls();
+            }
+        }
+
+        function renderActionControls() {
+            const currentQ = state.quiz.bucket[state.quiz.currentIndex];
+            const isLast = state.quiz.currentIndex === state.quiz.bucket.length - 1;
+
+            if (!state.quiz.isAnswerChecked) {
+                if (state.settings.mode === 'spelling') {
+                    return `
+                        <button onclick="checkVocabularyAnswer()" ${state.quiz.currentInput === '' ? 'disabled' : ''} id="check-answer-btn"
+                            class="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-extrabold text-lg py-3.5 px-6 rounded-2xl shadow-md hover:shadow-lg transition-all">
+                            בדיקת איות <i class="fa-solid fa-spell-check mr-1.5"></i>
+                        </button>
+                    `;
+                } else {
+                    return `<p class="text-center text-sm font-bold text-gray-500">בחרו את התרגום הנכון</p>`;
+                }
+            } else {
+                const nextText = isLast ? 'סיום ולתוצאות' : 'שאלה הבאה';
+                const nextIcon = isLast ? 'fa-flag-checkered' : 'fa-arrow-left';
+                
+                let feedback = '';
+                if (state.quiz.isCorrect) {
+                    feedback = `<span class="text-green-600 font-extrabold text-base"><i class="fa-solid fa-circle-check ml-1.5"></i>מעולה! נכון מאוד.</span>`;
+                } else {
+                    const translation = state.settings.mode === 'multiple' 
+                        ? `הפירוש הוא: <b>${currentQ.hebrew}</b>` 
+                        : `הכתיב הנכון: <b class="english-font uppercase">${currentQ.english}</b>`;
+                    feedback = `<span class="text-rose-600 font-bold text-sm"><i class="fa-solid fa-circle-xmark ml-1.5"></i>לא מדויק. ${translation}</span>`;
+                }
+
+                return `
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div class="text-center md:text-right">
+                            ${feedback}
+                        </div>
+                        <button onclick="nextWord()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-black py-3 px-8 rounded-2xl shadow-md transition-all flex items-center justify-center gap-2">
+                            ${nextText} <i class="fa-solid ${nextIcon}"></i>
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        function nextWord() {
+            playSound('click');
+            if (state.quiz.currentIndex < state.quiz.bucket.length - 1) {
+                state.quiz.currentIndex++;
+                state.quiz.currentInput = '';
+                state.quiz.isAnswerChecked = false;
+                state.quiz.isCorrect = false;
+                renderView();
+            } else {
+                finishPractice();
+            }
+        }
+
+        function finishPractice() {
+            clearInterval(state.quiz.timerInterval);
+            
+            const correctCount = state.quiz.bucket.filter(q => q.isCorrect).length;
+            if (correctCount === state.quiz.bucket.length && !state.quiz.timeOutReached) {
+                playSound('win');
+                triggerRainbowConfetti();
+            } else {
+                playSound('success');
+            }
+
+            state.view = 'results';
+            renderView();
+        }
+
+        function setupPhysicalKeyboardListeners() {
+            window.onkeydown = null;
+            window.onkeydown = function(e) {
+                if (state.view !== 'quiz' || state.settings.mode !== 'spelling') return;
+                
+                if (state.quiz.isAnswerChecked) {
+                    if (e.key === 'Enter') {
+                        nextWord();
+                    }
+                    return;
+                }
+
+                if (e.key.length === 1 && e.key.match(/[a-z]/i)) {
+                    spellingKeyPress(e.key.toLowerCase());
+                } else if (e.key === 'Backspace') {
+                    spellingKeyPress('⌫');
+                } else if (e.key === 'Escape') {
+                    spellingKeyPress('CLEAR');
+                } else if (e.key === 'Enter') {
+                    if (state.quiz.currentInput !== '') {
+                        checkVocabularyAnswer();
+                    }
+                }
+            };
+        }
+
+        function renderResults(container) {
+            container.className = "animate-pop flex flex-col justify-between h-full";
+            
+            const total = state.quiz.bucket.length;
+            const correct = state.quiz.bucket.filter(w => w.isCorrect).length;
+            const percentage = Math.round((correct / total) * 100);
+
+            let title = '';
+            let subtitle = '';
+            let bgCircle = '';
+
+            if (state.quiz.timeOutReached) {
+                title = 'נגמר הזמן! ⏰';
+                subtitle = 'מצוין בכל מקרה, בואו נראה אילו מילים הספקתם לפתור!';
+                bgCircle = 'bg-rose-100 text-rose-800 border-rose-300';
+            } else if (percentage === 100) {
+                title = 'אלופי האנגלית! 👑🇬🇧';
+                subtitle = 'מדהים! עניתם נכון על כל המילים בסבב הזה!';
+                bgCircle = 'bg-indigo-600 text-white border-indigo-700';
+            } else if (percentage >= 80) {
+                title = 'עבודה מעולה! 🌟';
+                subtitle = 'כל הכבוד! אתם שולטים היטב במילים הללו!';
+                bgCircle = 'bg-emerald-100 text-emerald-800 border-emerald-300';
+            } else if (percentage >= 50) {
+                title = 'כל הכבוד על המאמץ! 👍';
+                subtitle = 'עוד קצת שינון ותהיו מושלמים!';
+                bgCircle = 'bg-amber-100 text-amber-800 border-amber-300';
+            } else {
+                title = 'אל ייאוש, ממשיכים להתאמן! 💪';
+                subtitle = 'מומלץ לתרגל שוב את אותו סל מילים כדי ללמוד אותן טוב יותר!';
+                bgCircle = 'bg-rose-100 text-rose-800 border-rose-300';
+            }
+
+            container.innerHTML = `
+                <!-- Main Header Results -->
+                <div class="text-center mb-2">
+                    <h2 class="text-2xl font-black text-indigo-900 mb-0.5">${title}</h2>
+                    <p class="text-gray-500 text-xs">${subtitle}</p>
+                </div>
+
+                <!-- Score Metric and Cloud Saving Button -->
+                <div class="flex items-center justify-center gap-4 mb-3">
+                    <div class="w-20 h-20 rounded-full flex flex-col items-center justify-center font-black text-xl border-4 shadow-inner ${bgCircle}">
+                        <span>${percentage}%</span>
+                        <span class="text-[8px] font-black uppercase tracking-wider">ציון</span>
+                    </div>
+
+                    ${state.firebase.enabled ? `
+                        <button onclick="triggerSaveBucketModal()" 
+                            class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 px-4 py-3 rounded-2xl flex flex-col items-center justify-center transition-all duration-150 transform hover:scale-105">
+                            <i class="fa-solid fa-cloud-arrow-up text-lg mb-1"></i>
+                            <span class="text-xs font-black">שמירת דלי זה בענן</span>
+                        </button>
+                    ` : ''}
+                </div>
+
+                <!-- Detailed review scroll pane -->
+                <div class="flex-grow overflow-y-auto max-h-[140px] bg-gray-50 p-3 rounded-2xl border border-gray-100 mb-4 pr-2">
+                    <h3 class="text-xs font-black text-gray-700 mb-2 border-b border-gray-200 pb-1">המילים שלקחו חלק בסבב:</h3>
+                    <div class="space-y-1.5">
+                        ${state.quiz.bucket.map((word, idx) => {
+                            const isCorrect = word.isCorrect;
+                            const statusColor = isCorrect ? 'text-emerald-700 bg-emerald-50' : 'text-rose-700 bg-rose-50';
+                            const icon = isCorrect ? 'fa-circle-check text-emerald-500' : 'fa-circle-xmark text-rose-500';
+                            return `
+                                <div class="flex items-center justify-between p-2 rounded-xl text-xs font-bold ${statusColor}">
+                                    <div class="flex items-center gap-1.5">
+                                        <i class="fa-solid ${icon}"></i>
+                                        <span>${word.emoji}</span>
+                                        <span class="english-font font-black tracking-wide uppercase">${word.english}</span>
+                                        <span class="text-gray-400 font-bold">=</span>
+                                        <span>${word.hebrew}</span>
+                                    </div>
+                                    <div class="font-bold">
+                                        שלכם: <span class="english-font uppercase">${word.userAnswer || 'לא נענה'}</span>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+
+                <!-- Action Bucket Controls -->
+                <div class="flex flex-col gap-2 border-t border-gray-100 pt-3">
+                    <div class="grid grid-cols-2 gap-2">
+                        <!-- Option A: Repeat the identical bucket of words -->
+                        <button onclick="startVocabularyPractice(true)" 
+                            class="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs py-3 px-4 rounded-xl shadow-md transition-all flex flex-col items-center justify-center">
+                            <span class="flex items-center gap-1"><i class="fa-solid fa-rotate-left"></i> שחקו שוב אותו דלי</span>
+                            <span class="text-[9px] font-medium opacity-80">(אותן ${state.quiz.bucket.length} מילים)</span>
+                        </button>
+                        
+                        <!-- Option B: Keep settings but get NEW words from database -->
+                        <button onclick="startVocabularyPractice(false)" 
+                            class="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs py-3 px-4 rounded-xl shadow-md transition-all flex flex-col items-center justify-center">
+                            <span class="flex items-center gap-1"><i class="fa-solid fa-plus-circle"></i> מילים חדשות</span>
+                            <span class="text-[9px] font-medium opacity-80">(דלי מילים חדש)</span>
+                        </button>
+                    </div>
+
+                    <button onclick="navigate('settings')" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-extrabold py-2.5 rounded-xl transition-all text-xs text-center">
+                        <i class="fa-solid fa-sliders ml-1"></i> שינוי הגדרות וקטגוריות
+                    </button>
+                </div>
+            `;
+        }
+
+        function triggerSaveBucketModal() {
+            playSound('click');
+            const modal = document.getElementById('save-bucket-modal');
+            const input = document.getElementById('bucket-name-input');
+            const actionsContainer = document.getElementById('save-bucket-actions');
+
+            let origBucket = null;
+            if (state.quiz.editingBucketId) {
+                origBucket = state.savedBuckets.find(b => b.id === state.quiz.editingBucketId);
+            }
+
+            // Set suggested default name
+            if (origBucket) {
+                if (origBucket.createdBy === state.firebase.userId) {
+                    input.value = origBucket.name;
+                } else {
+                    input.value = `עותק של ${origBucket.name}`;
+                }
+            } else {
+                const currentCatName = state.settings.category === 'all' ? 'מילים מגוונות' : state.settings.category;
+                input.value = `דלי ${currentCatName} של ${state.firebase.userId ? state.firebase.userId.slice(0, 4) : 'אורח'}`;
+            }
+
+            modal.classList.remove('hidden');
+
+            // Render buttons dynamically based on editing context
+            let buttonsHtml = '';
+            if (origBucket && origBucket.createdBy === state.firebase.userId) {
+                buttonsHtml = `
+                    <button id="save-bucket-update" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-3 rounded-xl shadow-md transition-all duration-150">
+                        <i class="fa-solid fa-pen-to-square ml-1"></i>עדכן דלי קיים בענן
+                    </button>
+                    <button id="save-bucket-copy" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold py-3 rounded-xl shadow-md transition-all duration-150">
+                        <i class="fa-solid fa-copy ml-1"></i>שמור כעותק חדש
+                    </button>
+                `;
+            } else {
+                buttonsHtml = `
+                    <button id="save-bucket-confirm" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold py-3 rounded-xl shadow-md transition-all duration-150">
+                        שמור בענן
+                    </button>
+                `;
+            }
+            buttonsHtml += `
+                <button id="save-bucket-cancel" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-extrabold py-3 rounded-xl transition-all duration-150">
+                    ביטול
+                </button>
+            `;
+
+            actionsContainer.innerHTML = buttonsHtml;
+
+            const cancelBtn = document.getElementById('save-bucket-cancel');
+            cancelBtn.onclick = function() {
+                playSound('click');
+                modal.classList.add('hidden');
+            };
+
+            const confirmBtn = document.getElementById('save-bucket-confirm');
+            if (confirmBtn) {
+                confirmBtn.onclick = async function() {
+                    const bucketName = input.value.trim();
+                    if (!bucketName) {
+                        showToast("אנא הזינו שם לדלי המילים", "error");
+                        return;
+                    }
+                    playSound('click');
+                    modal.classList.add('hidden');
+                    await saveActiveBucketToCloud(bucketName);
+                };
+            }
+
+            const updateBtn = document.getElementById('save-bucket-update');
+            if (updateBtn) {
+                updateBtn.onclick = async function() {
+                    const bucketName = input.value.trim();
+                    if (!bucketName) {
+                        showToast("אנא הזינו שם לדלי המילים", "error");
+                        return;
+                    }
+                    playSound('click');
+                    modal.classList.add('hidden');
+                    await updateExistingBucketInCloud(origBucket.id, bucketName);
+                };
+            }
+
+            const copyBtn = document.getElementById('save-bucket-copy');
+            if (copyBtn) {
+                copyBtn.onclick = async function() {
+                    const bucketName = input.value.trim();
+                    if (!bucketName) {
+                        showToast("אנא הזינו שם לדלי המילים", "error");
+                        return;
+                    }
+                    playSound('click');
+                    modal.classList.add('hidden');
+                    await saveActiveBucketToCloud(bucketName);
+                };
+            }
+        }
+
+        async function saveActiveBucketToCloud(bucketName) {
+            if (!state.firebase.enabled) {
+                showToast("החיבור לענן אינו פעיל", "error");
+                return;
+            }
+
+            const db = state.firebase.db;
+            const appId = state.firebase.appId;
+
+            // Deep clean words from user session flags to keep the database pure
+            const wordsToSave = state.quiz.bucket.map(w => ({
+                english: w.english,
+                hebrew: w.hebrew,
+                category: w.category || 'custom',
+                emoji: w.emoji || '✏️'
+            }));
+
+            try {
+                // RULE 1: Strict collection reference path
+                const collectionRef = window.F_collection(db, 'artifacts', appId, 'public', 'data', 'saved_buckets');
+                
+                await window.F_addDoc(collectionRef, {
+                    name: bucketName,
+                    words: wordsToSave,
+                    createdBy: state.firebase.userId,
+                    createdAt: Date.now()
+                });
+
+                showToast(`הדלי "${bucketName}" נשמר בהצלחה בענן! ✨`);
+            } catch (err) {
+                console.error("Error saving custom bucket:", err);
+                showToast("שגיאה בשמירת הדלי בענן", "error");
+            }
+        }
+
+        async function updateExistingBucketInCloud(bucketId, bucketName) {
+            if (!state.firebase.enabled) {
+                showToast("החיבור לענן אינו פעיל", "error");
+                return;
+            }
+
+            const db = state.firebase.db;
+            const appId = state.firebase.appId;
+
+            const wordsToSave = state.quiz.bucket.map(w => ({
+                english: w.english,
+                hebrew: w.hebrew,
+                category: w.category || 'custom',
+                emoji: w.emoji || '✏️'
+            }));
+
+            try {
+                // RULE 1: Strict collection reference path
+                const docRef = window.F_doc(db, 'artifacts', appId, 'public', 'data', 'saved_buckets', bucketId);
+                
+                await window.F_updateDoc(docRef, {
+                    name: bucketName,
+                    words: wordsToSave,
+                    updatedAt: Date.now()
+                });
+
+                showToast(`הדלי "${bucketName}" עודכן בהצלחה בענן! ✨`);
+            } catch (err) {
+                console.error("Error updating custom bucket:", err);
+                showToast("שגיאה בעדכון הדלי בענן", "error");
+            }
+        }
+
+        async function saveManualEditsToCloud() {
+            if (!state.firebase.enabled) {
+                showToast("החיבור לענן אינו פעיל", "error");
+                return;
+            }
+            if (!state.settings.editingBucketId) {
+                showToast("אין דלי פעיל לעדכון", "error");
+                return;
+            }
+
+            const db = state.firebase.db;
+            const appId = state.firebase.appId;
+
+            // Deep clean words from user session flags to keep the database pure
+            const wordsToSave = state.settings.manualWords.map(w => ({
+                english: w.english.trim().toLowerCase(),
+                hebrew: w.hebrew.trim(),
+                category: w.category || 'custom',
+                emoji: w.emoji || '✏️'
+            }));
+
+            if (wordsToSave.length === 0) {
+                showToast("לא ניתן לשמור דלי ריק ממילים", "error");
+                return;
+            }
+
+            try {
+                // RULE 1: Strict collection reference path
+                const docRef = window.F_doc(db, 'artifacts', appId, 'public', 'data', 'saved_buckets', state.settings.editingBucketId);
+                
+                await window.F_updateDoc(docRef, {
+                    words: wordsToSave,
+                    updatedAt: Date.now()
+                });
+
+                showToast(`הדלי "${state.settings.editingBucketName}" עודכן בהצלחה בענן! 💾✨`, "success");
+            } catch (err) {
+                console.error("Error saving manual edits directly:", err);
+                showToast("שגיאה בעדכון השינויים בענן", "error");
+            }
+        }
+
+        function showConfirmDialog(msg, callback) {
+            const modal = document.getElementById('custom-confirm-modal');
+            const body = document.getElementById('confirm-modal-body');
+            const yes = document.getElementById('confirm-modal-yes');
+            const no = document.getElementById('confirm-modal-no');
+
+            body.innerText = msg;
+            modal.classList.remove('hidden');
+
+            yes.onclick = function() {
+                playSound('click');
+                modal.classList.add('hidden');
+                callback();
+            };
+
+            no.onclick = function() {
+                playSound('click');
+                modal.classList.add('hidden');
+            };
+        }
+
+        function confirmExit() {
+            playSound('click');
+            showConfirmDialog("האם ברצונכם לצאת מהתרגול הנוכחי ולחזור למסך הגדרות המשחק?", () => {
+                navigate('settings');
+            });
+        }
+
+        function triggerRainbowConfetti() {
+            const canvas = document.getElementById('confetti-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.classList.remove('hidden');
+            
+            let w = canvas.width = window.innerWidth;
+            let h = canvas.height = window.innerHeight;
+            
+            window.addEventListener('resize', () => {
+                w = canvas.width = window.innerWidth;
+                h = canvas.height = window.innerHeight;
+            });
+
+            const confettiParts = [];
+            const palette = ['#fbbf24', '#f87171', '#34d399', '#60a5fa', '#a78bfa', '#f472b6'];
+
+            for (let i = 0; i < 120; i++) {
+                confettiParts.push({
+                    x: Math.random() * w,
+                    y: Math.random() * h - h,
+                    size: Math.random() * 5 + 4,
+                    density: Math.random() * h,
+                    color: palette[Math.floor(Math.random() * palette.length)],
+                    tilt: Math.random() * 8 - 4,
+                    tiltAngleIncremental: Math.random() * 0.08 + 0.02,
+                    tiltAngle: 0
+                });
+            }
+
+            let frames = 0;
+            function run() {
+                ctx.clearRect(0, 0, w, h);
+                confettiParts.forEach((cp, idx) => {
+                    cp.tiltAngle += cp.tiltAngleIncremental;
+                    cp.y += (Math.cos(cp.density) + 2.5 + cp.size / 2) / 2;
+                    cp.x += Math.sin(cp.tiltAngle);
+                    cp.tilt = Math.sin(cp.tiltAngle - idx / 4) * 12;
+
+                    ctx.beginPath();
+                    ctx.lineWidth = cp.size;
+                    ctx.strokeStyle = cp.color;
+                    ctx.moveTo(cp.x + cp.tilt + cp.size / 2, cp.y);
+                    ctx.lineTo(cp.x + cp.tilt, cp.y + cp.tilt + cp.size / 2);
+                    ctx.stroke();
+                });
+
+                frames++;
+                if (frames < 280) {
+                    requestAnimationFrame(run);
+                } else {
+                    canvas.classList.add('hidden');
+                    ctx.clearRect(0, 0, w, h);
+                }
+            }
+            run();
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
